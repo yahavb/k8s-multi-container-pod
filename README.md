@@ -18,3 +18,7 @@ However, sidecar container increases the overhead as it duplicates the `kubectl`
 
 The example below proposes a single dedicated pod that accessible throughout the namespace via a k8s service. 
 The current case supports delete-pod call but is not limited to that action.  
+
+
+* native - uses sidecar container that runs kubectl 
+* kubectl-web - proxy delete-pod call to API server call. 
