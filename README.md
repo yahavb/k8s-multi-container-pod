@@ -3,8 +3,12 @@ Design considerations for multi-containers Kubernetes pods
 Two or more containers in a pod require a communication method between the containers. The prime example is when all containers needed to be restarted when one container fails abnormally. 
 https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/ suggests a shared-folder-based method for implementing a the multi-container pod lifecycle. Such method enables a container reboot. In case of many containers in a pod, the synchronization task becomes messy.  
 
-The following example uses a centralized approach where an entire pod can be terminated by one of the running containers when it observed an issue. One of the possible solutions is to run a sidecar kubectl container and allows direct access to the API server thru the 127.0.0.1 interface. e.g., when kubectl is enabled.
-```$ kubectl proxy --port=8080 &
+The following example uses a centralized approach where an entire pod can be terminated by one of the running containers when it observed an issue. One of the possible solutions is to run a sidecar kubectl container and allows direct access to the API server thru the 127.0.0.1 interface. e.g., when kubectl is enabled in the container.
+```
+$ kubectl proxy --port=8080 &
+```
+and accessible from any container within the pod thru
+```
 $ curl http://localhost:8080/api/
 {
   "versions": [
@@ -18,3 +22,10 @@ However, sidecar container increases the overhead as it duplicates the `kubectl`
 
 The example below proposes a single dedicated pod that accessible throughout the namespace via a k8s service. 
 The current case supports delete-pod call but is not limited to that action.  
+
+
+* native - uses sidecar container that runs kubectl 
+* kubectl-web - proxy delete-pod call to API server call. 
+Requires secret (token) derived from elevated service account. See `ClusterRole` and `ClusterRoleBinding` specs under kubectl-web/.
+
+The token can be fetched by `$(kubectl config view | grep delete-pod | cut -f 2 -d ":" | tr -d " ")`
