@@ -1,0 +1,48 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kubectl-web
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+       app: flask
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: somekey
+                operator: In
+                values:
+                - somevalue
+      tolerations:
+        - key: "somekey"
+          operator: "Equal"
+          value: "somevalue"
+          effect: "NoSchedule"
+      hostNetwork: true
+      restartPolicy: Always
+      containers:
+      - name: kubectl-web
+        image: kubectl-web:0.6
+        ports:
+        - containerPort: 11022
+        command: ["/main.py"]
+        env:
+        - name: namespace
+          valueFrom:
+           fieldRef:
+              fieldPath: metadata.namespace
+        - name: port
+          value: "11022"
+        - name: apiserver
+          value: "to be queried"
+          #$(kubectl config view | grep server | cut -f 2- -d ":" | tr -d " ")
+        - name: token
+          valueFrom:
+             secretKeyRef:
+                name: token
+                key: token

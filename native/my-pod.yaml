@@ -1,0 +1,81 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: my-pod
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+       app: apache
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: somekey
+                operator: In
+                values:
+                - somevalue
+      tolerations:
+        - key: "somekey"
+          operator: "Equal"
+          value: "somevalue"
+          effect: "NoSchedule"
+      hostNetwork: true
+      restartPolicy: Always
+      containers:
+      - name: kubeproxy
+        image: kubectl:v1.6.1
+        command: ["/start-proxy.sh"]
+        env:
+        - name: pod_name
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: container1
+          value: "kubeproxy"
+        - name: shared_folder
+          value: "/pod-data"
+        volumeMounts:
+        - name: shared-data
+          mountPath: /pod-data  
+      - name: container1
+        image: ubuntu:latest
+        command: ["/start.sh"]
+        env:
+        - name: namespace
+          valueFrom:
+           fieldRef:
+              fieldPath: metadata.namespace
+        - name: pod_name
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: shared_folder
+          value: "/pod-data"
+        volumeMounts:
+        - name: shared-data
+          mountPath: /pod-data  
+      - name: container2
+        image: ubuntu:latest
+        command: ["/start.sh"]
+        env:
+        - name: namespace
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: pod_name
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: container
+          value: "container2"
+        - name: log_level
+          value: "info"
+        - name: shared_folder
+          value: "/pod-data"
+        volumeMounts:
+        - name: shared-data
+          mountPath: /pod-data  
