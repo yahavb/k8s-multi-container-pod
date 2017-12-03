@@ -22,3 +22,6 @@ The current case supports delete-pod call but is not limited to that action.
 
 * native - uses sidecar container that runs kubectl 
 * kubectl-web - proxy delete-pod call to API server call. 
+Requires secret (token) derived from elevated service account. See `ClusterRole` and `ClusterRoleBinding` specs under kubectl-web/.
+
+The token can be fetched by `$(kubectl config view | grep delete-pod | cut -f 2 -d ":" | tr -d " ")`
